@@ -17,35 +17,36 @@ import time
 import math
 import numpy as np
 import nibabel as nib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from ukbb_cardiac.common.image_utils import *
 
 
 """ Deployment parameters """
-FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('time_step', 1,
+FLAGS = tf.compat.v1.app.flags.FLAGS
+tf.compat.v1.app.flags.DEFINE_integer('time_step', 1,
                             'Time step during deployment of LSTM.')
-tf.app.flags.DEFINE_enum('seq_name', 'ao', ['ao'],
+tf.compat.v1.app.flags.DEFINE_enum('seq_name', 'ao', ['ao'],
                          'Sequence name.')
-tf.app.flags.DEFINE_enum('model', 'UNet-LSTM', ['UNet', 'UNet-LSTM', 'Temporal-UNet'],
+tf.compat.v1.app.flags.DEFINE_enum('model', 'UNet-LSTM', ['UNet', 'UNet-LSTM', 'Temporal-UNet'],
                          'Model name.')
-tf.app.flags.DEFINE_string('data_dir',
+tf.compat.v1.app.flags.DEFINE_string('data_dir',
                            'Biobank_ao/validation',
                            'Path to the test set directory, under which images '
                            'are organised in subdirectories for each subject.')
-tf.app.flags.DEFINE_string('model_path',
+tf.compat.v1.app.flags.DEFINE_string('model_path',
                            'UNet-LSTM_ao_level5_filter16_22222_batch1_iter20000_lr0.001_zscore_tw9_h16_bidir_seq2seq_wR5_wr0.1_joint/UNet-LSTM_ao_level5_filter16_22222_batch1_iter20000_lr0.001_zscore_tw9_h16_bidir_seq2seq_wR5_wr0.1_joint.ckpt-20000',
                            'Path to the saved trained model.')
-tf.app.flags.DEFINE_boolean('process_seq', True,
+tf.compat.v1.app.flags.DEFINE_boolean('process_seq', True,
                             'Process a time sequence of images.')
-tf.app.flags.DEFINE_boolean('save_seg', True,
+tf.compat.v1.app.flags.DEFINE_boolean('save_seg', True,
                             'Save segmentation.')
-tf.app.flags.DEFINE_boolean('z_score', True,
+tf.compat.v1.app.flags.DEFINE_boolean('z_score', True,
                             'Normalise the image intensity to z-score. '
                             'Otherwise, rescale the intensity.')
-tf.app.flags.DEFINE_integer('weight_R', 5,
+tf.compat.v1.app.flags.DEFINE_integer('weight_R', 5,
                             'Radius of the weighting window.')
-tf.app.flags.DEFINE_float('weight_r', 0.1,
+tf.compat.v1.app.flags.DEFINE_float('weight_r', 0.1,
                           'Power of weight for the seq2seq loss. 0: uniform; 1: linear; 2: square.')
 
 
@@ -54,7 +55,14 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Import the computation graph and restore the variable values
-        saver = tf.train.import_meta_graph('{0}.meta'.format(FLAGS.model_path))
+        meta_graph_def = tf.compat.v1.MetaGraphDef()
+        with open('{0}.meta'.format(FLAGS.model_path), 'rb') as f:
+            meta_graph_def.ParseFromString(f.read())
+        for node in meta_graph_def.graph_def.node:
+            if node.op == 'FusedBatchNormGrad':
+                if '_output_shapes' in node.attr:
+                    del node.attr['_output_shapes']
+        saver = tf.compat.v1.train.import_meta_graph(meta_graph_def)
         saver.restore(sess, '{0}'.format(FLAGS.model_path))
 
         print('Start evaluating on the test set ...')
@@ -82,7 +90,7 @@ if __name__ == '__main__':
                 nim = nib.load(image_name)
                 dx, dy, dz, dt = nim.header['pixdim'][1:5]
                 area_per_pixel = dx * dy
-                image = nim.get_data()
+                image = nim.get_fdata()
                 X, Y, Z, T = image.shape
                 orig_image = image
 
@@ -222,7 +230,7 @@ if __name__ == '__main__':
                     nim = nib.load(image_name)
                     dx, dy, dz, dt = nim.header['pixdim'][1:5]
                     area_per_pixel = dx * dy
-                    image = nim.get_data()
+                    image = nim.get_fdata()
                     X, Y = image.shape[:2]
 
                     print('  Segmenting {} frame ...'.format(fr))

@@ -17,26 +17,27 @@ import time
 import math
 import numpy as np
 import nibabel as nib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from ukbb_cardiac.common.image_utils import rescale_intensity
 
 
 """ Deployment parameters """
-FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_enum('seq_name', 'sa',
+FLAGS = tf.compat.v1.app.flags.FLAGS
+tf.compat.v1.app.flags.DEFINE_enum('seq_name', 'sa',
                          ['sa', 'la_2ch', 'la_4ch'],
                          'Sequence name.')
-tf.app.flags.DEFINE_string('data_dir', 'ukbb_cardiac_demo',
+tf.compat.v1.app.flags.DEFINE_string('data_dir', 'ukbb_cardiac_demo',
                            'Path to the data set directory, under which images '
                            'are organised in subdirectories for each subject.')
-tf.app.flags.DEFINE_string('model_path',
+tf.compat.v1.app.flags.DEFINE_string('model_path',
                            '',
                            'Path to the saved trained model.')
-tf.app.flags.DEFINE_boolean('process_seq', True,
+tf.compat.v1.app.flags.DEFINE_boolean('process_seq', True,
                             'Process a time sequence of images.')
-tf.app.flags.DEFINE_boolean('save_seg', True,
+tf.compat.v1.app.flags.DEFINE_boolean('save_seg', True,
                             'Save segmentation.')
-tf.app.flags.DEFINE_boolean('seg4', False,
+tf.compat.v1.app.flags.DEFINE_boolean('seg4', False,
                             'Segment all the 4 chambers in long-axis 4 chamber view. ')
 
 
@@ -45,7 +46,14 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Import the computation graph and restore the variable values
-        saver = tf.train.import_meta_graph('{0}.meta'.format(FLAGS.model_path))
+        meta_graph_def = tf.compat.v1.MetaGraphDef()
+        with open('{0}.meta'.format(FLAGS.model_path), 'rb') as f:
+            meta_graph_def.ParseFromString(f.read())
+        for node in meta_graph_def.graph_def.node:
+            if node.op == 'FusedBatchNormGrad':
+                if '_output_shapes' in node.attr:
+                    del node.attr['_output_shapes']
+        saver = tf.compat.v1.train.import_meta_graph(meta_graph_def)
         saver.restore(sess, '{0}'.format(FLAGS.model_path))
 
         print('Start deployment on the data set ...')
@@ -78,7 +86,7 @@ if __name__ == '__main__':
                 # Read the image
                 print('  Reading {} ...'.format(image_name))
                 nim = nib.load(image_name)
-                image = nim.get_data()
+                image = nim.get_fdata()
                 X, Y, Z, T = image.shape
                 orig_image = image
 
@@ -167,7 +175,7 @@ if __name__ == '__main__':
                     # Read the image
                     print('  Reading {} ...'.format(image_name))
                     nim = nib.load(image_name)
-                    image = nim.get_data()
+                    image = nim.get_fdata()
                     X, Y = image.shape[:2]
                     if image.ndim == 2:
                         image = np.expand_dims(image, axis=2)

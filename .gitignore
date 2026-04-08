@@ -35,5 +35,6 @@ results/
 *.csv
 
 # Environment variables
+myenv/
 .env
 .env.local

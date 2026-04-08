@@ -17,7 +17,8 @@ import time
 import random
 import numpy as np
 import nibabel as nib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import cv2
 from ukbb_cardiac.common.network import *
 from ukbb_cardiac.common.network_ao import *
@@ -25,56 +26,56 @@ from ukbb_cardiac.common.image_utils import *
 
 
 """ Training parameters """
-FLAGS = tf.app.flags.FLAGS
+FLAGS = tf.compat.v1.app.flags.FLAGS
 # NOTE: use image_size = 256 for aortic images to learn the boundary.
 # Otherwise, the boundary may be misunderstood as the aorta.
-tf.app.flags.DEFINE_integer('image_size', 256,
+tf.compat.v1.app.flags.DEFINE_integer('image_size', 256,
                             'Image size after cropping.')
-tf.app.flags.DEFINE_integer('time_window', 11,
+tf.compat.v1.app.flags.DEFINE_integer('time_window', 11,
                             'Time window for LSTM.')
-tf.app.flags.DEFINE_integer('train_batch_size', 5,
+tf.compat.v1.app.flags.DEFINE_integer('train_batch_size', 5,
                             'Number of images for each training batch.')
-tf.app.flags.DEFINE_integer('validation_batch_size', 5,
+tf.compat.v1.app.flags.DEFINE_integer('validation_batch_size', 5,
                             'Number of images for each validation batch.')
-tf.app.flags.DEFINE_integer('num_filter', 16,
+tf.compat.v1.app.flags.DEFINE_integer('num_filter', 16,
                             'Number of filters for the first convolution layer.')
-tf.app.flags.DEFINE_integer('num_level', 5,
+tf.compat.v1.app.flags.DEFINE_integer('num_level', 5,
                             'Number of network levels.')
-tf.app.flags.DEFINE_integer('num_hidden', 16,
+tf.compat.v1.app.flags.DEFINE_integer('num_hidden', 16,
                             'Number of hidden status dimension in LSTM.')
-tf.app.flags.DEFINE_integer('train_iteration', 20000,
+tf.compat.v1.app.flags.DEFINE_integer('train_iteration', 20000,
                             'Number of training iterations.')
-tf.app.flags.DEFINE_float('learning_rate', 1e-3,
+tf.compat.v1.app.flags.DEFINE_float('learning_rate', 1e-3,
                           'Learning rate.')
-tf.app.flags._global_parser.add_argument('--reduce_lr_after', action='append',
+tf.compat.v1.app.flags._global_parser.add_argument('--reduce_lr_after', action='append',
                                          help='Reduce the learning rate after this many iterations.')
-tf.app.flags.DEFINE_enum('seq_name', 'ao', ['ao'],
+tf.compat.v1.app.flags.DEFINE_enum('seq_name', 'ao', ['ao'],
                          'Sequence name.')
-tf.app.flags.DEFINE_enum('model', 'UNet', ['UNet', 'UNet-LSTM', 'Temporal-UNet'],
+tf.compat.v1.app.flags.DEFINE_enum('model', 'UNet', ['UNet', 'UNet-LSTM', 'Temporal-UNet'],
                          'Model name.')
-tf.app.flags.DEFINE_string('dataset_dir',
+tf.compat.v1.app.flags.DEFINE_string('dataset_dir',
                            'Biobank_ao',
                            'Path to the dataset directory, which is split into '
                            'training and validation subdirectories.')
-tf.app.flags.DEFINE_string('log_dir', 'log',
+tf.compat.v1.app.flags.DEFINE_string('log_dir', 'log',
                            'Directory for saving the log file.')
-tf.app.flags.DEFINE_string('checkpoint_dir', 'model',
+tf.compat.v1.app.flags.DEFINE_string('checkpoint_dir', 'model',
                            'Directory for saving the trained model.')
-tf.app.flags.DEFINE_string('model_path', '',
+tf.compat.v1.app.flags.DEFINE_string('model_path', '',
                            'Path to the saved trained model.')
-tf.app.flags.DEFINE_boolean('z_score', True,
+tf.compat.v1.app.flags.DEFINE_boolean('z_score', True,
                             'Normalise the image intensity to z-score. Otherwise, rescale the intensity.')
-tf.app.flags.DEFINE_boolean('bidirectional', True,
+tf.compat.v1.app.flags.DEFINE_boolean('bidirectional', True,
                             'Bi-directional LSTM.')
-tf.app.flags.DEFINE_boolean('seq2seq', True,
+tf.compat.v1.app.flags.DEFINE_boolean('seq2seq', True,
                             'Sequence to sequence learning. Otherwise, only learn the last time frame.')
-tf.app.flags.DEFINE_integer('weight_R', 5,
+tf.compat.v1.app.flags.DEFINE_integer('weight_R', 5,
                             'Radius of the weighting window.')
-tf.app.flags.DEFINE_float('weight_r', 0,
+tf.compat.v1.app.flags.DEFINE_float('weight_r', 0,
                           'Power of weight for the seq2seq loss. 0: uniform; 1: linear; 2: square.')
-tf.app.flags.DEFINE_boolean('joint_train', False,
+tf.compat.v1.app.flags.DEFINE_boolean('joint_train', False,
                             'Joint training of UNet and LSTM.')
-tf.app.flags.DEFINE_boolean('from_scratch', False,
+tf.compat.v1.app.flags.DEFINE_boolean('from_scratch', False,
                             'Train from scratch for UNet-LSTM.')
 
 
@@ -113,13 +114,13 @@ def get_random_batch(filename_list, batch_size, image_size=192, time_window=1, d
             print('  Select {0} {1}'.format(image_name, label_name))
 
             # Read image and label
-            image = nib.load(image_name).get_data()
-            label = nib.load(label_name).get_data()
+            image = nib.load(image_name).get_fdata()
+            label = nib.load(label_name).get_fdata()
 
             # label is a temporally sparse annotation
             # label_prop has annotation across all time frames
             if label_prop_name:
-                label_prop = nib.load(label_prop_name).get_data()
+                label_prop = nib.load(label_prop_name).get_fdata()
             else:
                 label_prop = None
 
