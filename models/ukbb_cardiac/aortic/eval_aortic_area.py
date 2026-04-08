@@ -59,11 +59,11 @@ if __name__ == '__main__':
             nim = nib.load(image_name)
             dx, dy = nim.header['pixdim'][1:3]
             area_per_pixel = dx * dy
-            image = nim.get_data()
+            image = nim.get_fdata()
 
             # Read aortic image segmentation
             nim = nib.load(seg_name)
-            seg = nim.get_data()
+            seg = nim.get_fdata()
 
             if not aorta_pass_quality_control(image, seg):
                 continue
