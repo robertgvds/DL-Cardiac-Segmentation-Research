@@ -1,123 +1,233 @@
+# Copyright 2017, Wenjia Bai. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the 'License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an 'AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
 import os
-import urllib.request
-import subprocess
-import argparse
-from pathlib import Path
-import sys
-import shutil
+import time
+import math
+import numpy as np
+import nibabel as nib
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+from ukbb_cardiac.common.image_utils import rescale_intensity
 
-def download_models(model_dir):
-    """Garante que os pesos da rede neural estão descarregados."""
-    URL = 'https://www.doc.ic.ac.uk/~wbai/data/ukbb_cardiac/trained_model/'
-    models = ['FCN_sa', 'FCN_la_2ch', 'FCN_la_4ch', 'FCN_la_4ch_seg4']
-    
-    os.makedirs(model_dir, exist_ok=True)
-    
-    print("🔄 Verificando pesos dos modelos...")
-    for model_name in models:
-        for ext in ['.meta', '.index', '.data-00000-of-00001']:
-            filename = f"{model_name}{ext}"
-            filepath = os.path.join(model_dir, filename)
-            if not os.path.exists(filepath):
-                print(f"   Baixando {filename}...")
-                urllib.request.urlretrieve(URL + filename, filepath)
-    print("✅ Modelos prontos!")
 
-def rename_for_compatibility(data_dir):
-    """
-    Renomeia fisicamente os arquivos na pasta de trabalho para o padrão da rede ukbb.
-    Como estamos trabalhando em uma cópia (niiti_writable), os originais estão a salvo.
-    """
-    mapping = {
-        'cine_sa.nii.gz': 'sa.nii.gz',
-        'cine_2ch.nii.gz': 'la_2ch.nii.gz',
-        'cine_4ch.nii.gz': 'la_4ch.nii.gz'
-    }
-    print("\n🔄 Renomeando arquivos para compatibilidade...")
-    
-    for patient_id in os.listdir(data_dir):
-        p_dir = os.path.join(data_dir, patient_id)
-        if os.path.isdir(p_dir):
-            for src_name, dst_name in mapping.items():
-                src_path = os.path.join(p_dir, src_name)
-                dst_path = os.path.join(p_dir, dst_name)
-                
-                # Só renomeia se o arquivo com o nosso nome semântico existir
-                if os.path.exists(src_path):
-                    os.rename(src_path, dst_path)
-                    print(f"   [{patient_id}] Renomeado: {src_name} -> {dst_name}")
+""" Deployment parameters """
+FLAGS = tf.compat.v1.app.flags.FLAGS
+tf.compat.v1.app.flags.DEFINE_enum('seq_name', 'sa',
+                         ['sa', 'la_2ch', 'la_4ch'],
+                         'Sequence name.')
+tf.compat.v1.app.flags.DEFINE_string('data_dir', 'ukbb_cardiac_demo',
+                           'Path to the data set directory, under which images '
+                           'are organised in subdirectories for each subject.')
+tf.compat.v1.app.flags.DEFINE_string('model_path',
+                           '',
+                           'Path to the saved trained model.')
+tf.compat.v1.app.flags.DEFINE_boolean('process_seq', True,
+                            'Process a time sequence of images.')
+tf.compat.v1.app.flags.DEFINE_boolean('save_seg', True,
+                            'Save segmentation.')
+tf.compat.v1.app.flags.DEFINE_boolean('seg4', False,
+                            'Segment all the 4 chambers in long-axis 4 chamber view. ')
 
-def run_command(cmd, cwd, env, step_name="Processo"):
-    """Executa um comando no terminal com bloco Try/Except rigoroso para debug."""
-    print(f"\n▶ Executando: {step_name}")
-    print(f"  Comando: {cmd}")
-    
-    try:
-        result = subprocess.run(cmd, shell=True, cwd=cwd, env=env, check=True, text=True, capture_output=True)
-        print(f"✅ {step_name} concluído com sucesso!")
-        
-    except subprocess.CalledProcessError as e:
-        print(f"\n❌ ERRO CRÍTICO EM: {step_name}")
-        print("="*50)
-        print("📝 LOG DE ERRO (STDERR):")
-        print(e.stderr)
-        print("-" * 50)
-        print("📝 SAÍDA PADRÃO ANTES DO ERRO (STDOUT):")
-        print(e.stdout)
-        print("="*50)
-        print("⚠️ Parando o pipeline para investigação...")
-        sys.exit(1)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Pipeline de Inferência - UKBB Cardiac")
-    parser.add_argument("-d", "--data_dir", required=True, help="Caminho absoluto para a pasta copiável dos pacientes")
-    parser.add_argument("-o", "--output_csv", default="results", help="Pasta para salvar os CSVs")
-    parser.add_argument("-g", "--gpu", default="0", help="ID da GPU a ser utilizada")
-    args = parser.parse_args()
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
 
-    REPO_ROOT = Path(__file__).resolve().parent
-    UKBB_DIR = REPO_ROOT / "models" / "ukbb_cardiac"
-    MODEL_DIR = UKBB_DIR / "trained_model"
-    CSV_DIR = REPO_ROOT / args.output_csv
-    
-    os.makedirs(CSV_DIR, exist_ok=True)
+        # Import the computation graph and restore the variable values
+        meta_graph_def = tf.compat.v1.MetaGraphDef()
+        with open('{0}.meta'.format(FLAGS.model_path), 'rb') as f:
+            meta_graph_def.ParseFromString(f.read())
+        for node in meta_graph_def.graph_def.node:
+            if node.op == 'FusedBatchNormGrad':
+                if '_output_shapes' in node.attr:
+                    del node.attr['_output_shapes']
+        saver = tf.compat.v1.train.import_meta_graph(meta_graph_def)
+        saver.restore(sess, '{0}'.format(FLAGS.model_path))
 
-    env = os.environ.copy()
-    env['PYTHONPATH'] = f"{REPO_ROOT}/models:{env.get('PYTHONPATH', '')}"
-    env['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-    env['TF_CPP_MIN_LOG_LEVEL'] = '2' 
+        print('Start deployment on the data set ...')
+        start_time = time.time()
 
-    download_models(MODEL_DIR)
-    
-    # Aplica o "rename" físico
-    rename_for_compatibility(args.data_dir)
+        # Process each subject subdirectory
+        data_list = sorted(os.listdir(FLAGS.data_dir))
+        processed_list = []
+        table_time = []
+        for data in data_list:
+            print(data)
+            data_dir = os.path.join(FLAGS.data_dir, data)
 
-    print('\n=============================================')
-    print('  🧠 INICIANDO SEGMENTAÇÃO EIXO CURTO (SA)')
-    print('=============================================')
-    run_command(f"python3 common/deploy_network.py --seq_name sa --data_dir '{args.data_dir}' --model_path trained_model/FCN_sa", 
-                cwd=UKBB_DIR, env=env, step_name="Rede Eixo Curto (SA)")
-    
-    run_command(f"python3 short_axis/eval_ventricular_volume.py --data_dir '{args.data_dir}' --output_csv '{CSV_DIR}/ventricular_volume.csv'", 
-                cwd=UKBB_DIR, env=env, step_name="Cálculo Volume (SA)")
+            if FLAGS.seq_name == 'la_4ch' and FLAGS.seg4:
+                seg_name = '{0}/seg4_{1}.nii.gz'.format(data_dir, FLAGS.seq_name)
+            else:
+                seg_name = '{0}/seg_{1}.nii.gz'.format(data_dir, FLAGS.seq_name)
+            if os.path.exists(seg_name):
+                continue
 
-    run_command(f"python3 short_axis/eval_wall_thickness.py --data_dir '{args.data_dir}' --output_max_csv '{CSV_DIR}/temp_max.csv' --output_csv '{CSV_DIR}/wall_thickness.csv'", 
-                cwd=UKBB_DIR, env=env, step_name="Cálculo Espessura da Parede (SA)")
+            if FLAGS.process_seq:
+                # Process the temporal sequence
+                image_name = '{0}/{1}.nii.gz'.format(data_dir, FLAGS.seq_name)
 
-    print('\n=============================================')
-    print('  🧠 INICIANDO SEGMENTAÇÃO EIXO LONGO (LA)')
-    print('=============================================')
-    run_command(f"python3 common/deploy_network.py --seq_name la_2ch --data_dir '{args.data_dir}' --model_path trained_model/FCN_la_2ch", 
-                cwd=UKBB_DIR, env=env, step_name="Rede Eixo Longo 2 Câmaras (LA 2CH)")
-    
-    run_command(f"python3 common/deploy_network.py --seq_name la_4ch --data_dir '{args.data_dir}' --model_path trained_model/FCN_la_4ch", 
-                cwd=UKBB_DIR, env=env, step_name="Rede Eixo Longo 4 Câmaras (LA 4CH)")
-    
-    run_command(f"python3 common/deploy_network.py --seq_name la_4ch --data_dir '{args.data_dir}' --seg4 --model_path trained_model/FCN_la_4ch_seg4", 
-                cwd=UKBB_DIR, env=env, step_name="Rede Eixo Longo 4 Câmaras (Segmentação 4)")
+                if not os.path.exists(image_name):
+                    print('  Directory {0} does not contain an image with file '
+                          'name {1}. Skip.'.format(data_dir, os.path.basename(image_name)))
+                    continue
 
-    run_command(f"python3 long_axis/eval_atrial_volume.py --data_dir '{args.data_dir}' --output_csv '{CSV_DIR}/atrial_volume.csv'", 
-                cwd=UKBB_DIR, env=env, step_name="Cálculo Volume Atrial (LA)")
+                # Read the image
+                print('  Reading {} ...'.format(image_name))
+                nim = nib.load(image_name)
+                image = nim.get_fdata()
+                X, Y, Z, T = image.shape
+                orig_image = image
 
-    print('\n🎉 PIPELINE FINALIZADO COM SUCESSO!')
-    print(f"Os relatórios clínicos foram salvos em: {CSV_DIR}")
+                print('  Segmenting full sequence ...')
+                start_seg_time = time.time()
+
+                # Intensity rescaling
+                image = rescale_intensity(image, (1, 99))
+
+                # Prediction (segmentation)
+                pred = np.zeros(image.shape)
+
+                # Pad the image size to be a factor of 16 so that the
+                # downsample and upsample procedures in the network will
+                # result in the same image size at each resolution level.
+                X2, Y2 = int(math.ceil(X / 16.0)) * 16, int(math.ceil(Y / 16.0)) * 16
+                x_pre, y_pre = int((X2 - X) / 2), int((Y2 - Y) / 2)
+                x_post, y_post = (X2 - X) - x_pre, (Y2 - Y) - y_pre
+                image = np.pad(image, ((x_pre, x_post), (y_pre, y_post), (0, 0), (0, 0)), 'constant')
+
+                # Process each time frame
+                for t in range(T):
+                    # Transpose the shape to NXYC
+                    image_fr = image[:, :, :, t]
+                    image_fr = np.transpose(image_fr, axes=(2, 0, 1)).astype(np.float32)
+                    image_fr = np.expand_dims(image_fr, axis=-1)
+
+                    # Evaluate the network
+                    prob_fr, pred_fr = sess.run(['prob:0', 'pred:0'],
+                                                feed_dict={'image:0': image_fr, 'training:0': False})
+
+                    # Transpose and crop segmentation to recover the original size
+                    pred_fr = np.transpose(pred_fr, axes=(1, 2, 0))
+                    pred_fr = pred_fr[x_pre:x_pre + X, y_pre:y_pre + Y]
+                    pred[:, :, :, t] = pred_fr
+
+                seg_time = time.time() - start_seg_time
+                print('  Segmentation time = {:3f}s'.format(seg_time))
+                table_time += [seg_time]
+                processed_list += [data]
+
+                # ED frame defaults to be the first time frame.
+                # Determine ES frame according to the minimum LV volume.
+                k = {}
+                k['ED'] = 0
+                if FLAGS.seq_name == 'sa' or (FLAGS.seq_name == 'la_4ch' and FLAGS.seg4):
+                    k['ES'] = np.argmin(np.sum(pred == 1, axis=(0, 1, 2)))
+                else:
+                    k['ES'] = np.argmax(np.sum(pred == 1, axis=(0, 1, 2)))
+                print('  ED frame = {:d}, ES frame = {:d}'.format(k['ED'], k['ES']))
+
+                # Save the segmentation
+                if FLAGS.save_seg:
+                    print('  Saving segmentation ...')
+                    nim2 = nib.Nifti1Image(pred, nim.affine)
+                    nim2.header['pixdim'] = nim.header['pixdim']
+                    if FLAGS.seq_name == 'la_4ch' and FLAGS.seg4:
+                        seg_name = '{0}/seg4_{1}.nii.gz'.format(data_dir, FLAGS.seq_name)
+                    else:
+                        seg_name = '{0}/seg_{1}.nii.gz'.format(data_dir, FLAGS.seq_name)
+                    nib.save(nim2, seg_name)
+
+                    for fr in ['ED', 'ES']:
+                        nib.save(nib.Nifti1Image(orig_image[:, :, :, k[fr]], nim.affine),
+                                 '{0}/{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr))
+                        if FLAGS.seq_name == 'la_4ch' and FLAGS.seg4:
+                            seg_name = '{0}/seg4_{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr)
+                        else:
+                            seg_name = '{0}/seg_{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr)
+                        nib.save(nib.Nifti1Image(pred[:, :, :, k[fr]], nim.affine), seg_name)
+            else:
+                # Process ED and ES time frames
+                image_ED_name = '{0}/{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, 'ED')
+                image_ES_name = '{0}/{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, 'ES')
+                if not os.path.exists(image_ED_name) or not os.path.exists(image_ES_name):
+                    print('  Directory {0} does not contain an image with '
+                          'file name {1} or {2}. Skip.'.format(data_dir,
+                                                               os.path.basename(image_ED_name),
+                                                               os.path.basename(image_ES_name)))
+                    continue
+
+                measure = {}
+                for fr in ['ED', 'ES']:
+                    image_name = '{0}/{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr)
+
+                    # Read the image
+                    print('  Reading {} ...'.format(image_name))
+                    nim = nib.load(image_name)
+                    image = nim.get_fdata()
+                    X, Y = image.shape[:2]
+                    if image.ndim == 2:
+                        image = np.expand_dims(image, axis=2)
+
+                    print('  Segmenting {} frame ...'.format(fr))
+                    start_seg_time = time.time()
+
+                    # Intensity rescaling
+                    image = rescale_intensity(image, (1, 99))
+
+                    # Pad the image size to be a factor of 16 so that
+                    # the downsample and upsample procedures in the network
+                    # will result in the same image size at each resolution
+                    # level.
+                    X2, Y2 = int(math.ceil(X / 16.0)) * 16, int(math.ceil(Y / 16.0)) * 16
+                    x_pre, y_pre = int((X2 - X) / 2), int((Y2 - Y) / 2)
+                    x_post, y_post = (X2 - X) - x_pre, (Y2 - Y) - y_pre
+                    image = np.pad(image, ((x_pre, x_post), (y_pre, y_post), (0, 0)), 'constant')
+
+                    # Transpose the shape to NXYC
+                    image = np.transpose(image, axes=(2, 0, 1)).astype(np.float32)
+                    image = np.expand_dims(image, axis=-1)
+
+                    # Evaluate the network
+                    prob, pred = sess.run(['prob:0', 'pred:0'],
+                                          feed_dict={'image:0': image, 'training:0': False})
+
+                    # Transpose and crop the segmentation to recover the original size
+                    pred = np.transpose(pred, axes=(1, 2, 0))
+                    pred = pred[x_pre:x_pre + X, y_pre:y_pre + Y]
+
+                    seg_time = time.time() - start_seg_time
+                    print('  Segmentation time = {:3f}s'.format(seg_time))
+                    table_time += [seg_time]
+                    processed_list += [data]
+
+                    # Save the segmentation
+                    if FLAGS.save_seg:
+                        print('  Saving segmentation ...')
+                        nim2 = nib.Nifti1Image(pred, nim.affine)
+                        nim2.header['pixdim'] = nim.header['pixdim']
+                        if FLAGS.seq_name == 'la_4ch' and FLAGS.seg4:
+                            seg_name = '{0}/seg4_{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr)
+                        else:
+                            seg_name = '{0}/seg_{1}_{2}.nii.gz'.format(data_dir, FLAGS.seq_name, fr)
+                        nib.save(nim2, seg_name)
+
+        if FLAGS.process_seq:
+            print('Average segmentation time = {:.3f}s per sequence'.format(np.mean(table_time)))
+        else:
+            print('Average segmentation time = {:.3f}s per frame'.format(np.mean(table_time)))
+        process_time = time.time() - start_time
+        print('Including image I/O, CUDA resource allocation, '
+              'it took {:.3f}s for processing {:d} subjects ({:.3f}s per subjects).'.format(
+            process_time, len(processed_list), process_time / len(processed_list)))

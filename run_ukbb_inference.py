@@ -4,6 +4,7 @@ import subprocess
 import argparse
 from pathlib import Path
 import sys
+import shutil
 
 def download_models(model_dir):
     """Garante que os pesos da rede neural estão descarregados."""
@@ -22,26 +23,29 @@ def download_models(model_dir):
                 urllib.request.urlretrieve(URL + filename, filepath)
     print("✅ Modelos prontos!")
 
-def prepare_compatibility_links(data_dir):
+def rename_for_compatibility(data_dir):
     """
-    Cria atalhos temporários para enganar a rede ukbb, que exige nomes fixos (sa, la_2ch, la_4ch).
-    Assim mantemos o nosso padrão semântico (cine_sa) sem quebrar o código original do autor.
+    Renomeia fisicamente os arquivos na pasta de trabalho para o padrão da rede ukbb.
+    Como estamos trabalhando em uma cópia (niiti_writable), os originais estão a salvo.
     """
     mapping = {
         'cine_sa.nii.gz': 'sa.nii.gz',
         'cine_2ch.nii.gz': 'la_2ch.nii.gz',
         'cine_4ch.nii.gz': 'la_4ch.nii.gz'
     }
-    print("\n🔗 Criando links de compatibilidade para a rede...")
+    print("\n🔄 Renomeando arquivos para compatibilidade...")
+    
     for patient_id in os.listdir(data_dir):
         p_dir = os.path.join(data_dir, patient_id)
         if os.path.isdir(p_dir):
             for src_name, dst_name in mapping.items():
                 src_path = os.path.join(p_dir, src_name)
                 dst_path = os.path.join(p_dir, dst_name)
-                # Se a nossa imagem existe e o atalho ainda não, cria o atalho (symlink)
-                if os.path.exists(src_path) and not os.path.exists(dst_path):
-                    os.symlink(src_path, dst_path)
+                
+                # Só renomeia se o arquivo com o nosso nome semântico existir
+                if os.path.exists(src_path):
+                    os.rename(src_path, dst_path)
+                    print(f"   [{patient_id}] Renomeado: {src_name} -> {dst_name}")
 
 def run_command(cmd, cwd, env, step_name="Processo"):
     """Executa um comando no terminal com bloco Try/Except rigoroso para debug."""
@@ -49,10 +53,7 @@ def run_command(cmd, cwd, env, step_name="Processo"):
     print(f"  Comando: {cmd}")
     
     try:
-        # capture_output=True permite-nos ler o erro exato do terminal se falhar
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env, check=True, text=True, capture_output=True)
-        # Se quiser ver o log completo de sucesso, descomente a linha abaixo:
-        # print(result.stdout) 
         print(f"✅ {step_name} concluído com sucesso!")
         
     except subprocess.CalledProcessError as e:
@@ -65,11 +66,11 @@ def run_command(cmd, cwd, env, step_name="Processo"):
         print(e.stdout)
         print("="*50)
         print("⚠️ Parando o pipeline para investigação...")
-        sys.exit(1) # Para o script imediatamente para vermos o erro
+        sys.exit(1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Pipeline de Inferência - UKBB Cardiac")
-    parser.add_argument("-d", "--data_dir", required=True, help="Caminho absoluto para a pasta dos pacientes")
+    parser.add_argument("-d", "--data_dir", required=True, help="Caminho absoluto para a pasta copiável dos pacientes")
     parser.add_argument("-o", "--output_csv", default="results", help="Pasta para salvar os CSVs")
     parser.add_argument("-g", "--gpu", default="0", help="ID da GPU a ser utilizada")
     args = parser.parse_args()
@@ -88,8 +89,8 @@ if __name__ == '__main__':
 
     download_models(MODEL_DIR)
     
-    # Cria os atalhos mágicos!
-    prepare_compatibility_links(args.data_dir)
+    # Aplica o "rename" físico
+    rename_for_compatibility(args.data_dir)
 
     print('\n=============================================')
     print('  🧠 INICIANDO SEGMENTAÇÃO EIXO CURTO (SA)')
