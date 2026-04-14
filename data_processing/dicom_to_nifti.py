@@ -35,7 +35,7 @@ def convert_patient_dicoms(raw_patient_dir, output_base_dir, patient_id):
     print(f"\n[{patient_id}] Analisando diretório e renomeando todas as sequências...")
 
     for root, dirs, files in os.walk(raw_patient_dir):
-        if not any(f.lower().endswith('.dcm') for f in files):
+        if not any(f.lower().endswith(('.dcm', '.ima')) for f in files):
             continue
 
         folder_name = os.path.basename(root)
