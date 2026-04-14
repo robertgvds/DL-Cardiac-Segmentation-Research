@@ -25,28 +25,46 @@ def download_models(model_dir):
 
 def rename_for_compatibility(data_dir):
     """
-    Renomeia fisicamente os arquivos na pasta de trabalho para o padrão da rede ukbb.
-    Como estamos trabalhando em uma cópia (niiti_writable), os originais estão a salvo.
+    Procura os ficheiros de forma flexível. Se for .nii (descomprimido), 
+    comprime para .nii.gz na hora, para que a rede consiga ler sem erros de formato.
     """
+    import shutil
+    import gzip
+    
     mapping = {
-        'cine_sa.nii.gz': 'sa.nii.gz',
-        'cine_2ch.nii.gz': 'la_2ch.nii.gz',
-        'cine_4ch.nii.gz': 'la_4ch.nii.gz'
+        'cine_sa': 'sa.nii.gz',
+        'cine_2ch': 'la_2ch.nii.gz',
+        'cine_4ch': 'la_4ch.nii.gz'
     }
-    print("\n🔄 Renomeando arquivos para compatibilidade...")
+    print("\n🔄 Ajustando ficheiros para compatibilidade flexível (com suporte a .nii)...")
     
     for patient_id in os.listdir(data_dir):
         p_dir = os.path.join(data_dir, patient_id)
         if os.path.isdir(p_dir):
-            for src_name, dst_name in mapping.items():
-                src_path = os.path.join(p_dir, src_name)
-                dst_path = os.path.join(p_dir, dst_name)
+            files_in_dir = os.listdir(p_dir)
+            
+            if not files_in_dir:
+                print(f"   ⚠️ Aviso: A pasta do paciente {patient_id} está vazia!")
+                continue
                 
-                # Só renomeia se o arquivo com o nosso nome semântico existir
-                if os.path.exists(src_path):
-                    os.rename(src_path, dst_path)
-                    print(f"   [{patient_id}] Renomeado: {src_name} -> {dst_name}")
-
+            for f in files_in_dir:
+                for key, target_name in mapping.items():
+                    # Verifica se contém a chave (ex: cine_sa) e se é um ficheiro NIfTI (.nii ou .nii.gz)
+                    if key in f and (f.endswith('.nii') or f.endswith('.nii.gz')) and f != target_name:
+                        src_path = os.path.join(p_dir, f)
+                        dst_path = os.path.join(p_dir, target_name)
+                        
+                        # Se for apenas .nii, temos de o comprimir de verdade
+                        if f.endswith('.nii'):
+                            with open(src_path, 'rb') as f_in:
+                                with gzip.open(dst_path, 'wb') as f_out:
+                                    shutil.copyfileobj(f_in, f_out)
+                            print(f"   [{patient_id}] Comprimido e Ajustado: {f} -> {target_name}")
+                        else:
+                            # Se já for .nii.gz, basta copiar
+                            shutil.copy(src_path, dst_path)
+                            print(f"   [{patient_id}] Copiado e Ajustado: {f} -> {target_name}")
+                            
 def run_command(cmd, cwd, env, step_name="Processo"):
     """Executa um comando no terminal com bloco Try/Except rigoroso para debug."""
     print(f"\n▶ Executando: {step_name}")
