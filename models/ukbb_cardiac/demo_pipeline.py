@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
     # The URL for downloading demo data
     URL = 'https://www.doc.ic.ac.uk/~wbai/data/ukbb_cardiac/'
+    '''
 
     # Download demo images
     print('Downloading demo images ...')
@@ -52,7 +53,7 @@ if __name__ == '__main__':
                   'trained_model/{0}.index'.format(model_name),
                   'trained_model/{0}.data-00000-of-00001'.format(model_name)]:
             urllib.request.urlretrieve(URL + f, f)
-
+    '''
     # Analyse show-axis images
     print('******************************')
     print('  Short-axis image analysis')
@@ -60,8 +61,7 @@ if __name__ == '__main__':
 
     # Deploy the segmentation network
     print('Deploying the segmentation network ...')
-    os.system('CUDA_VISIBLE_DEVICES={0} python3 common/deploy_network.py --seq_name sa --data_dir demo_image '
-              '--model_path trained_model/FCN_sa'.format(CUDA_VISIBLE_DEVICES))
+    os.system('CUDA_VISIBLE_DEVICES={0} python3 common/deploy_network.py --seq_name sa --data_dir demo_image --model_path trained_model/FCN_sa'.format(CUDA_VISIBLE_DEVICES))
 
     # Evaluate ventricular volumes
     print('Evaluating ventricular volumes ...')
