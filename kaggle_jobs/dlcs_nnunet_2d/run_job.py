@@ -31,10 +31,13 @@ class KaggleJobConfig:
     branch: str = "exp/nnunet-2d-cmr-multi"
     dataset_id: int = 501
     dataset_name: str = "Dataset501_CMRMULTI_LGE"
+    dataset_slug: str = "cmr-multi-lge-sax"
+    kaggle_owner: str = "robertgvds"
     configuration: str = "2d"
     fold: int = 0
     trainer: str = "nnUNetTrainer_250epochs"
-    input_dataset_dir: Path = Path("/kaggle/input/cmr-multi-lge-sax")
+    kaggle_input_root: Path = Path("/kaggle/input")
+    scratch_dir: Path = Path("/tmp/dlcs_work")
     working_dir: Path = Path("/kaggle/working")
 
 
@@ -43,12 +46,35 @@ class KaggleNnUNet2DRunner:
 
     def __init__(self, config: KaggleJobConfig | None = None) -> None:
         self.config = config or KaggleJobConfig()
-        self.repo_dir = self.config.working_dir / "repo"
-        self.nnunet_raw = self.config.working_dir / "nnUNet_raw"
-        self.nnunet_preprocessed = self.config.working_dir / "nnUNet_preprocessed"
-        self.nnunet_results = self.config.working_dir / "nnUNet_results"
-        self.preds_dir = self.config.working_dir / "preds_ts"
+        # Mantém repo, raw e preprocessed em /tmp para não poluir os outputs de /kaggle/working
+        self.repo_dir = self.config.scratch_dir / "repo"
+        self.nnunet_raw = self.config.scratch_dir / "nnUNet_raw"
+        self.nnunet_preprocessed = self.config.scratch_dir / "nnUNet_preprocessed"
+        self.nnunet_results = self.config.scratch_dir / "nnUNet_results"
+        self.preds_dir = self.config.scratch_dir / "preds_ts"
         self.export_dir = self.config.working_dir / "export"
+
+    def _resolve_input_dataset_dir(self) -> Path:
+        """Resolve o diretório montado do dataset no Kaggle (padrão novo e legado)."""
+        candidates = [
+            self.config.kaggle_input_root / "datasets" / self.config.kaggle_owner / self.config.dataset_slug,
+            self.config.kaggle_input_root / self.config.dataset_slug,
+        ]
+        for cand in candidates:
+            if cand.exists():
+                LOGGER.info("Dataset localizado em: %s", cand)
+                return cand
+
+        # Busca dinâmica de fallback dentro de /kaggle/input caso a hierarquia mude novamente
+        if self.config.kaggle_input_root.exists():
+            for path in sorted(self.config.kaggle_input_root.rglob(self.config.dataset_slug)):
+                if path.is_dir():
+                    LOGGER.info("Dataset localizado via busca dinâmica em: %s", path)
+                    return path
+
+        raise FileNotFoundError(
+            f"Dataset '{self.config.dataset_slug}' não encontrado em {self.config.kaggle_input_root}"
+        )
 
     @staticmethod
     def _run_cmd(cmd: Sequence[str], cwd: Path | None = None) -> None:
@@ -83,7 +109,7 @@ class KaggleNnUNet2DRunner:
 
     def _package_nifti_predictions(self, images_ts: Path, labels_ts: Path) -> Path:
         """Organiza LGE + GT + PRED (`int16`, affine preservada) por paciente e gera ZIP."""
-        bundle_dir = self.config.working_dir / "niftis_predicoes_nnunet_2d"
+        bundle_dir = self.config.scratch_dir / "niftis_predicoes_nnunet_2d"
         if bundle_dir.exists():
             shutil.rmtree(bundle_dir)
         bundle_dir.mkdir(parents=True, exist_ok=True)
@@ -116,6 +142,7 @@ class KaggleNnUNet2DRunner:
     def run(self) -> None:
         """Executa preparação, pré-processamento, treino 2D, inferência e avaliação."""
         self._setup_environment()
+        input_dataset_dir = self._resolve_input_dataset_dir()
         dataset_dir = self.nnunet_raw / self.config.dataset_name
         images_ts = dataset_dir / "imagesTs"
         labels_ts = dataset_dir / "labelsTs"
@@ -127,7 +154,7 @@ class KaggleNnUNet2DRunner:
                 "-m",
                 "src.data.prepare_nnunet",
                 "--input-dir",
-                str(self.config.input_dataset_dir),
+                str(input_dataset_dir),
                 "--nnunet-raw",
                 str(self.nnunet_raw),
             ],
@@ -153,7 +180,7 @@ class KaggleNnUNet2DRunner:
                 "-m",
                 "src.data.prepare_nnunet",
                 "--input-dir",
-                str(self.config.input_dataset_dir),
+                str(input_dataset_dir),
                 "--nnunet-raw",
                 str(self.nnunet_raw),
                 "--nnunet-preprocessed",
