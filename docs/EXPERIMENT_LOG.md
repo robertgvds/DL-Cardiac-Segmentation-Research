@@ -20,6 +20,7 @@ Todos os experimentos no CMR-MULTI utilizam rigorosamente o **mesmo split estrat
 | **Exp 04B (v1)** | nnU-Net v2 2D `ResEncM` (5c — com Scar) — `Dataset501`, `250ep`, `DA=4` | — | — | — | — | — | — | Cancelado ep. 106/250 (`312 s/ep`, proj. ~21,7h > teto 12h) |
 | **Exp 05A** | **U-Net ResNet34 (4c — sem Scar)** — SMP ImageNet, `1.0 mm`, `256×256`, multi-res aug, 120 ep, TTA + SW | 0.8871 ± 0.0289 | 0.8004 ± 0.0505 *(med 0.8076)* | — | — | 0.7608 ± 0.0781 *(med 0.7999)* | Anat `0.4551` *(DSC `0.8161`, ASD `1.68 mm`)* | Concluído (`exp/unet-resnet34-cmr-multi`) |
 | **Exp 05B** | **U-Net ResNet34 (5c — com Scar)** — SMP ImageNet, `1.0 mm`, `256×256`, multi-res aug, 120 ep, TTA + SW | 0.8896 ± 0.0272 | 0.7967 ± 0.0452 *(ASD `0.91 mm`)* | 0.7753 ± 0.0465 | 0.5480 ± 0.1341 *(máx **0.7307**)* | 0.7652 ± 0.0381 | **Task 2 `0.7548`** *(vPCC `0.7890`, RAE `0.2753`)* | Concluído (`exp/unet-resnet34-cmr-multi`) |
+| **Exp 06** | **Cascata 2-Etapas (Exp 05A → Fibrose 135 vols CMR+EMIDEC)** — ROI `0.75 mm`, `160×160`, norm. local Mio, 3ch, `t=0.35` | 0.8867 ± 0.0312 | **0.8024 ± 0.0494** *(erro vol `6.46 mL`)* | 0.7720 ± 0.0444 | 0.5325 ± 0.1071 *(máx `0.6776` em `026`)* | 0.7608 ± 0.0781 | Task 2 `0.7289` *(vPCC `0.6692`, RAE `0.3212`)* | Concluído (`exp/cascade-scar-cmr-emidec`) |
 
 ---
 
@@ -31,6 +32,7 @@ Avaliação direta (sem *fine-tuning* local) de modelos treinados exclusivamente
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Exp 05A (U-Net ResNet34 4c)** | **0.8235 ± 0.0566** | 0.6470 ± 0.0893 | — | — | **0.6896 ± 0.1272** | 12.77 ± 7.11 | 2.89 ± 0.93 | Anat `0.3608` *(DSC `0.7200`)* |
 | **Exp 05B (U-Net ResNet34 5c)** | 0.8232 ± 0.0849 | **0.6513 ± 0.0897** | 0.6324 ± 0.0801 | 0.1286 ± 0.1439 *(máx 0.3933)* | 0.6281 ± 0.1775 | **11.51 ± 4.33** | **2.58 ± 0.62** | Task 2 `0.4105` *(vPCC `-0.044`, RAE `5.43`)* |
+| **Exp 06 (Cascata CMR+EMIDEC)** | 0.8206 ± 0.0562 | 0.6445 ± 0.0914 | **0.6385 ± 0.0759** | 0.0722 ± 0.1107 *(máx 0.2941)* | **0.6896 ± 0.1272** | 12.83 ± 7.13 | 2.92 ± 0.96 | Task 2 `0.4104` *(vPCC `-0.193`, RAE `5.89`)* |
 
 ---
 
@@ -53,3 +55,4 @@ Avaliação direta (sem *fine-tuning* local) de modelos treinados exclusivamente
 2. **Eficiência e competitividade da U-Net ResNet34 (`Exp 05A/05B`):** Com apenas ~8 minutos de treino na T4, a reamostragem física (`1.0 mm`) + augmentation multi-resolução (Hoh et al., 2024) + TTA alcançou **`Task 2 Score = 0.7548`** (`vPCC=0.789`, `RAE=27.5%`, `ASD Mio=0.91 mm`), `0 FP` em `LGE_SAX_008` e **excelente generalização anatômica *zero-shot* na coorte clínica HU-UFJF (`VE=0.823`, `Mio=0.651`, `VD=0.690`, `ASD=2.58 mm ≈ 1 pixel nativo`)**.
 3. **Domain shift patológico na fibrose *zero-shot* do HU-UFJF (`Scar = 0.129`):** Evidencia a diferença estrutural entre infarto extenso (CMR-MULTI: `22–77 mL`) e miocardite focal/mesocárdica de baixo volume (HU-UFJF: `1.5–10 mL`), motivando diretamente: (a) **Cascata em 2 etapas** com **CMR-MULTI + EMIDEC (135 volumes LGE)** na Etapa 2 de fibrose, e (b) **adaptação de domínio (fine-tuning / co-training)** na coorte HU-UFJF.
 4. **Custo computacional `ResEncM` na Tesla T4 (`Exp 04A/04B v1`):** `nnUNetPlannerResEncM` escalou o `batch_size` 2D para ~5× o da `PlainConvUNet` (`~310 s/época` vs. `~55 s/época`), exigindo `nnUNetTrainer_50epochs` (~4,3h) ou `ExperimentPlanner` padrão (~1,5–3,5h) dentro da cota Kaggle.
+5. **Lição da Cascata com EMIDEC sem balanceamento de domínio (`Exp 06`):** Misturar 100 casos do EMIDEC (74% do treino, infarto subendocárdico conservador) com 35 do CMR-MULTI (26%) melhorou o Miocárdio Total (`0.8024`, erro volumétrico `6.46 mL`) e bateu recorde em `LGE_SAX_026` (`0.6776`), mas introduziu *annotation shift* nas cicatrizes extensas (`LGE_SAX_047`) e derrubou o limiar calibrado para `0.35`, não superando o Exp 05B/Exp 04 na fibrose média (`0.5325`) nem no *zero-shot* HU-UFJF (`0.0722`). Confirma que: (a) a cascata deve equilibrar/ponderar os domínios ou pré-treinar no EMIDEC + *fine-tuning* no CMR-MULTI, e (b) a miocardite do HU-UFJF requer adaptação de domínio (CV 5-fold local).

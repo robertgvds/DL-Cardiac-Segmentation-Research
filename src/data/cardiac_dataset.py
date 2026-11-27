@@ -211,6 +211,25 @@ class LabelStandardizer:
 
         raise ValueError(f"Formato de máscara HU-UFJF não suportado: '{mask_format}'")
 
+    @staticmethod
+    def standardize_emidec_for_stage2(raw_mask: np.ndarray) -> np.ndarray:
+        """Harmoniza máscara EMIDEC (`0=Bg,1=VE,2=Mio,3=Scar,4=MVO`) para 4 classes sem VD.
+
+        Une Infarto (3) + MVO (4) em Fibrose/Scar (`3`), garantindo compatibilidade
+        direta com a Etapa 2 da cascata sem nunca misturar o rótulo `4` (MVO) do
+        EMIDEC com o rótulo `4` (VD) do CMR-MULTI.
+        """
+        mask = np.rint(raw_mask).astype(np.int16)
+        unique_vals = set(int(v) for v in np.unique(mask))
+        if not unique_vals.issubset({0, 1, 2, 3, 4}):
+            raise ValueError(f"Rótulos inesperados na máscara EMIDEC: {sorted(unique_vals)}")
+
+        out = np.zeros_like(mask, dtype=np.int16)
+        out[mask == 1] = 1
+        out[mask == 2] = 2
+        out[(mask == 3) | (mask == 4)] = 3
+        return out
+
     @classmethod
     def standardize_record_mask(cls, record: VolumeRecord, task_mode: TaskMode) -> Optional[np.ndarray]:
         """Carrega e padroniza a máscara de um `VolumeRecord` conforme a coorte e tarefa."""
@@ -219,6 +238,9 @@ class LabelStandardizer:
         raw_mask, _ = NiftiVolumeIO.load_volume(record.mask_path, is_mask=True)
         if record.mask_format == "cmr_5class":
             return cls.standardize_cmr_multi_mask(raw_mask, task_mode)
+        if record.mask_format == "emidec_5class":
+            # Emidec não possui VD; retorna máscara harmonizada (0=Bg,1=VE,2=Mio,3=Scar+MVO)
+            return cls.standardize_emidec_for_stage2(raw_mask)
         aux_scar = None
         if record.aux_scar_path is not None and record.aux_scar_path.is_file():
             aux_scar, _ = NiftiVolumeIO.load_volume(record.aux_scar_path, is_mask=True)
@@ -535,6 +557,41 @@ class CmrMultiCohortLoader:
             mask_arr, _ = NiftiVolumeIO.load_volume(rec.mask_path, is_mask=True)
             scar_map[rec.patient_id] = bool(np.any(mask_arr == 3))
         return scar_map
+
+
+class EmidecCohortLoader:
+    """Indexa os 100 volumes rotulados de treino de `robertgvds/emidec-lge-sax`."""
+
+    def __init__(self, root_dir: Path) -> None:
+        self.root_dir = root_dir
+
+    def discover_train_records(self) -> List[VolumeRecord]:
+        """Localiza pares `(image, mask)` dentro de `train/Case_XXXX/` aceitando `.nii` e `.nii.gz`."""
+        train_root = self.root_dir / "train"
+        if not train_root.exists():
+            train_root = self.root_dir
+
+        records: List[VolumeRecord] = []
+        for case_dir in sorted(p for p in train_root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+            img_path = NiftiVolumeIO.find_nifti_by_stem(case_dir, "image")
+            msk_path = NiftiVolumeIO.find_nifti_by_stem(case_dir, "mask")
+            if img_path is None or msk_path is None:
+                continue
+            records.append(
+                VolumeRecord(
+                    patient_id=f"EMIDEC_{case_dir.name}",
+                    cohort="emidec",
+                    image_path=img_path,
+                    mask_path=msk_path,
+                    mask_format="emidec_5class",
+                )
+            )
+
+        if not records:
+            raise FileNotFoundError(f"Nenhum caso rotulado EMIDEC encontrado em {train_root}")
+
+        LOGGER.info("Coorte EMIDEC indexada em %s: %d volumes rotulados.", train_root, len(records))
+        return records
 
 
 class HuUfjfCohortLoader:

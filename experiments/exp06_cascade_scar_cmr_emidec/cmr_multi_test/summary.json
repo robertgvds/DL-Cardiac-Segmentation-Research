@@ -1,0 +1,211 @@
+{
+  "cohort": "CMR-MULTI Test (Cascade)",
+  "task_mode": "full_5c",
+  "num_patients": 7,
+  "num_with_scar": 5,
+  "num_healthy": 2,
+  "cmr_multi_miccai2026": {
+    "cmr_multi_dsc_board": 0.7357,
+    "cmr_multi_scar_mass_vpcc": 0.6692,
+    "cmr_multi_scar_mass_rae": 0.3212,
+    "cmr_multi_task2_score": 0.7289
+  },
+  "metrics": {
+    "dice_lv": {
+      "n": 7,
+      "mean": 0.8867,
+      "std": 0.0312,
+      "median": 0.8851,
+      "min": 0.8417,
+      "max": 0.934
+    },
+    "dice_myo_total": {
+      "n": 7,
+      "mean": 0.8024,
+      "std": 0.0494,
+      "median": 0.8066,
+      "min": 0.7073,
+      "max": 0.8598
+    },
+    "dice_myo_healthy": {
+      "n": 7,
+      "mean": 0.772,
+      "std": 0.0444,
+      "median": 0.7724,
+      "min": 0.6976,
+      "max": 0.8428
+    },
+    "dice_scar": {
+      "n": 5,
+      "mean": 0.5325,
+      "std": 0.1071,
+      "median": 0.484,
+      "min": 0.4305,
+      "max": 0.6776
+    },
+    "dice_rv": {
+      "n": 7,
+      "mean": 0.7608,
+      "std": 0.0781,
+      "median": 0.7999,
+      "min": 0.6452,
+      "max": 0.8371
+    },
+    "board_dice_scar": {
+      "n": 7,
+      "mean": 0.5232,
+      "std": 0.302,
+      "median": 0.484,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "board_dice_mean": {
+      "n": 7,
+      "mean": 0.7357,
+      "std": 0.0878,
+      "median": 0.7111,
+      "min": 0.6341,
+      "max": 0.9035
+    },
+    "hd95_lv_mm": {
+      "n": 7,
+      "mean": 7.557,
+      "std": 3.4527,
+      "median": 7.7333,
+      "min": 1.9865,
+      "max": 11.9793
+    },
+    "hd95_myo_total_mm": {
+      "n": 7,
+      "mean": 4.9178,
+      "std": 2.4364,
+      "median": 4.0724,
+      "min": 2.8723,
+      "max": 10.0162
+    },
+    "hd95_scar_mm": {
+      "n": 5,
+      "mean": 15.7592,
+      "std": 9.3254,
+      "median": 11.894,
+      "min": 5.588,
+      "max": 29.3175
+    },
+    "hd95_rv_mm": {
+      "n": 7,
+      "mean": 11.6828,
+      "std": 3.9321,
+      "median": 10.0269,
+      "min": 8.5,
+      "max": 20.0001
+    },
+    "hd_lv_mm": {
+      "n": 7,
+      "mean": 12.3665,
+      "std": 4.831,
+      "median": 11.686,
+      "min": 5.6847,
+      "max": 20.0959
+    },
+    "hd_myo_total_mm": {
+      "n": 7,
+      "mean": 14.7404,
+      "std": 5.3785,
+      "median": 13.3948,
+      "min": 10.2236,
+      "max": 26.1697
+    },
+    "hd_scar_mm": {
+      "n": 5,
+      "mean": 31.3548,
+      "std": 8.7252,
+      "median": 29.1467,
+      "min": 22.0248,
+      "max": 42.0858
+    },
+    "hd_rv_mm": {
+      "n": 7,
+      "mean": 23.8915,
+      "std": 6.6512,
+      "median": 24.4561,
+      "min": 14.3908,
+      "max": 32.4901
+    },
+    "asd_lv_mm": {
+      "n": 7,
+      "mean": 1.4343,
+      "std": 0.8965,
+      "median": 1.3758,
+      "min": 0.3426,
+      "max": 3.2387
+    },
+    "asd_myo_total_mm": {
+      "n": 7,
+      "mean": 1.0037,
+      "std": 0.4094,
+      "median": 0.9417,
+      "min": 0.6593,
+      "max": 1.8826
+    },
+    "asd_scar_mm": {
+      "n": 5,
+      "mean": 3.5477,
+      "std": 1.8247,
+      "median": 3.8403,
+      "min": 1.2502,
+      "max": 5.7361
+    },
+    "asd_rv_mm": {
+      "n": 7,
+      "mean": 2.6047,
+      "std": 1.3073,
+      "median": 2.0431,
+      "min": 1.4316,
+      "max": 5.2247
+    },
+    "myo_volume_abs_error_ml": {
+      "n": 7,
+      "mean": 6.4628,
+      "std": 7.5795,
+      "median": 3.5103,
+      "min": 0.0631,
+      "max": 21.962
+    },
+    "scar_volume_abs_error_ml": {
+      "n": 7,
+      "mean": 11.6091,
+      "std": 16.1072,
+      "median": 6.2741,
+      "min": 0.0,
+      "max": 46.5195
+    },
+    "scar_volume_rel_error_pct": {
+      "n": 5,
+      "mean": 32.1186,
+      "std": 17.0146,
+      "median": 28.8947,
+      "min": 16.9578,
+      "max": 60.7198
+    },
+    "scar_mass_rae": {
+      "n": 5,
+      "mean": 0.3212,
+      "std": 0.1701,
+      "median": 0.2889,
+      "min": 0.1696,
+      "max": 0.6072
+    }
+  },
+  "healthy_false_positives": [
+    {
+      "patient_id": "LGE_SAX_005",
+      "fp_voxels": 70,
+      "fp_volume_ml": 0.2814
+    },
+    {
+      "patient_id": "LGE_SAX_008",
+      "fp_voxels": 0,
+      "fp_volume_ml": 0.0
+    }
+  ]
+}
