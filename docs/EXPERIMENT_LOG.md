@@ -9,31 +9,31 @@ Todos os experimentos no CMR-MULTI utilizam rigorosamente o **mesmo split estrat
 
 ## 1. Resumo Consolidado (CMR-MULTI LGE SAX — Teste Inédito N=7)
 
-| Experimento | Arquitetura / Configuração | Dice VE | Dice Miocárdio Total | Dice Mio Saudável | Dice Fibrose (N=5) | Dice VD | Status |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Exp 01** | Fine-tuning UKBB TF1 (4 ch) na coorte HU-UFJF (CV 10-fold) | — *(coorte local)* | — | — | — | — | Concluído (`v0.1`) |
-| **Exp 02A** | UKBB Inicial — FCN TF1 (4 ch), sem escala, `lr=1e-5`, `bs=1`, `flip=True`, 4000 iter | 0.6227 ± 0.0883 | 0.4773 ± 0.0906 | — | — | 0.3835 ± 0.1219 | Concluído (`v0.2`) |
-| **Exp 02B** | UKBB Corrigido — FCN TF1 (4 ch), `1.4 mm/px`, `192×192`, `lr=1e-4`, `bs=2`, `flip=False`, `rot=15°`, 4000 iter | **0.8807 ± 0.0322** | 0.7741 ± 0.0507 | — | — | **0.7611 ± 0.0566** | Concluído (`v0.2`) |
-| **Exp 03** | U-Net ResNet34 — PyTorch SMP (5 ch), ImageNet, `200×200` (pad `224×224`), `0.5 CEw + 0.5 Dice`, 70 ep, `AdamW 4e-4` | **0.8832 ± 0.0397** | **0.7950 ± 0.0583** | 0.7798 ± 0.0475 | **0.5580 ± 0.1085** *(med 0.5722)* | 0.7466 ± 0.0833 | Concluído (`v0.2`) |
-| **Exp 04** | **nnU-Net v2 2D** — `Dataset501_CMRMULTI_LGE` (5 ch), Fold 0 (`SEED=42`), `nnUNetTrainer_250epochs` | *A executar* | *A executar* | *A executar* | *A executar* | *A executar* | Em preparação |
+| Experimento | Arquitetura / Configuração | Dice VE | Dice Miocárdio Total | Dice Mio Saudável | Dice Fibrose (N=5) | Dice VD | Score MICCAI 2026 | Status |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Exp 01** | Fine-tuning UKBB TF1 (4 ch) na coorte HU-UFJF (CV 10-fold) | — *(coorte local)* | — | — | — | — | — | Concluído (`v0.1`) |
+| **Exp 02A** | UKBB Inicial — FCN TF1 (4 ch), sem escala, `lr=1e-5`, `bs=1`, `flip=True`, 4000 iter | 0.6227 ± 0.0883 | 0.4773 ± 0.0906 | — | — | 0.3835 ± 0.1219 | — | Concluído (`v0.2`) |
+| **Exp 02B** | UKBB Corrigido — FCN TF1 (4 ch), `1.4 mm/px`, `192×192`, `lr=1e-4`, `bs=2`, `flip=False`, `rot=15°`, 4000 iter | 0.8807 ± 0.0322 | 0.7741 ± 0.0507 | — | — | 0.7611 ± 0.0566 | — | Concluído (`v0.2`) |
+| **Exp 03** | U-Net ResNet34 — PyTorch SMP (5 ch), ImageNet, `200×200` (pad `224×224`), `0.5 CEw + 0.5 Dice`, 70 ep, `AdamW 4e-4` | 0.8832 ± 0.0397 | 0.7950 ± 0.0583 | 0.7798 ± 0.0475 | 0.5580 ± 0.1085 *(med 0.5722)* | 0.7466 ± 0.0833 | — | Concluído (`v0.2`) |
+| **Exp 04** | **nnU-Net v2 2D** — `Dataset501_CMRMULTI_LGE` (5 ch), Fold 0 (`SEED=42`), `nnUNetTrainer_250epochs` | **0.9008 ± 0.0183** | **0.8085 ± 0.0331** | **0.7959 ± 0.0258** | **0.5846 ± 0.0907** *(med **0.6316**)* | **0.7673 ± 0.0541** | **Task 2 `0.7682`** *(vPCC `0.9585`, RAE `0.2482`)* | Concluído (`exp/nnunet-2d-cmr-multi`) |
 
 ---
 
-## 2. Detalhamento por Paciente de Teste (Exp 02B vs. Exp 03)
+## 2. Detalhamento por Paciente de Teste (Exp 02B vs. Exp 03 vs. Exp 04)
 
-| Paciente | Tem Fibrose? | UKBB VE | UKBB Mio | UKBB VD | UNet VE | UNet Mio Total | UNet Mio Saudável | UNet Fibrose | UNet VD |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `LGE_SAX_005` | Não | 0.9094 | 0.7836 | 0.7865 | 0.9340 | 0.7952 | 0.7963 | — *(FP mínimo)* | 0.8174 |
-| `LGE_SAX_007` | Sim | 0.9012 | 0.7227 | 0.6625 | 0.8773 | 0.8127 | 0.7861 | **0.6766** | 0.6645 |
-| `LGE_SAX_008` | Não | 0.9242 | 0.8324 | 0.8366 | 0.9276 | 0.8394 | 0.8394 | — *(0 FP)* | 0.8211 |
-| `LGE_SAX_014` | Sim | 0.8430 | 0.7034 | 0.7956 | 0.8175 | 0.6748 | 0.7771 | 0.3823 *(outlier)* | 0.6693 |
-| `LGE_SAX_026` | Sim | 0.8722 | 0.8391 | 0.7766 | 0.8645 | 0.8545 | 0.8059 | 0.5722 | 0.8097 |
-| `LGE_SAX_028` | Sim | 0.8735 | 0.7651 | 0.7488 | 0.8903 | 0.8023 | 0.7679 | 0.6023 | 0.6412 |
-| `LGE_SAX_047` | Sim | 0.8415 | 0.7725 | 0.7213 | 0.8712 | 0.7861 | 0.6858 | 0.5564 | 0.8034 |
+| Paciente | Fibrose? | UKBB (02B) VE / Mio / VD | UNet ResNet34 (03) VE / Mio / Scar / VD | **nnU-Net v2 2D (04)** VE / Mio Total / Mio Saud. / Fibrose / VD | HD95 Mio (04) | Erro Vol. Fibrose (04) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `LGE_SAX_005` | Não | 0.909 / 0.784 / 0.787 | 0.934 / 0.795 / — / 0.817 | 0.918 / 0.807 / 0.811 / — *(0.82 mL FP)* / 0.763 | 2.27 mm | 0.82 mL (205 vox) |
+| `LGE_SAX_007` | Sim | 0.901 / 0.723 / 0.663 | 0.877 / 0.813 / 0.677 / 0.664 | **0.913** / 0.812 / 0.771 / 0.665 / 0.680 | 3.03 mm | 4.42 mL (`20.0%`) |
+| `LGE_SAX_008` | Não | 0.924 / 0.832 / 0.837 | 0.928 / 0.839 / — / 0.821 | 0.925 / 0.836 / 0.836 / — *(0.02 mL FP)* / 0.825 | 2.87 mm | 0.02 mL (5 vox) |
+| `LGE_SAX_014` | Sim | 0.843 / 0.703 / 0.796 | 0.818 / 0.675 / 0.382 / 0.669 | **0.899** / **0.758** / **0.792** / **0.522** / **0.824** | 11.06 mm | 16.17 mL (`43.7%`) |
+| `LGE_SAX_026` | Sim | 0.872 / 0.839 / 0.777 | 0.865 / 0.855 / 0.572 / 0.810 | **0.884** / 0.854 / 0.806 / **0.647** / 0.769 | 3.02 mm | 5.92 mL (`15.2%`) |
+| `LGE_SAX_028` | Sim | 0.874 / 0.765 / 0.749 | 0.890 / 0.802 / 0.602 / 0.641 | 0.890 / 0.776 / **0.797** / 0.457 / 0.716 | 5.22 mm | **2.76 mL (`7.3%`)** |
+| `LGE_SAX_047` | Sim | 0.842 / 0.773 / 0.721 | 0.871 / 0.786 / 0.556 / 0.803 | **0.877** / **0.815** / **0.758** / **0.632** / 0.793 | 4.99 mm | 29.03 mL (`37.9%`) |
 
 ---
 
-## 3. Principais Conclusões dos Baselines
-1. **Impacto da engenharia espacial no UKBB:** Reamostrar para `1.4 mm/px` (`192×192`), elevar `lr` para `1e-4`, `batch=2` e remover `flip` elevou o Dice em **+41,4% (VE)**, **+62,2% (Miocárdio)** e **+98,5% (VD)**.
-2. **Desempenho da U-Net ResNet34 em 5 classes:** Empatou no VE, venceu em 6/7 casos no Miocárdio Total, manteve falsos positivos nulos/desprezíveis em saudáveis (`005` e `008`) e atingiu média de **0.6019** na fibrose nos 4 casos sem o outlier `LGE_SAX_014` (máximo **0.6766**).
-3. **Justificativa para nnU-Net v2 e Cascata:** O caso `LGE_SAX_014` (Dice Mio 0.6748 / Fibrose 0.3823) evidencia o limite de modelos 2D diretos com poucos volumes, motivando a migração oficial para **nnU-Net v2** (2D → 3D Fullres → Cascata Anatomia + Fibrose).
+## 3. Principais Conclusões
+1. **Impacto da engenharia espacial no UKBB (Exp 02A → 02B):** Reamostrar para `1.4 mm/px` (`192×192`), elevar `lr` para `1e-4`, `batch=2` e remover `flip` elevou o Dice em **+41,4% (VE)**, **+62,2% (Miocárdio)** e **+98,5% (VD)**.
+2. **Saltos da nnU-Net v2 2D (Exp 04):** Superou **todos os baselines** em todas as 5 métricas (`VE = 0.9008`, `Mio Total = 0.8085`, `Mio Saudável = 0.7959`, `Fibrose = 0.5846` com mediana `0.6316`, `VD = 0.7673`), reduziu fortemente a variância inter-paciente, recuperou o outlier `LGE_SAX_014` (`+14,0 p.p.` na fibrose sobre Exp 03) e atingiu correlação volumétrica de massa de fibrose **`vPCC = 0.9585`** (`RAE = 24.82%`, **Task 2 Score MICCAI 2026 = `0.7682`**).
+3. **Próximos passos motivados pelos resultados:** Os pequenos falsos positivos de fibrose nos casos saudáveis (`5 voxels` em `008` e `205 voxels` em `005`) penalizam o `Board DSC` estrito do challenge (`0.7204`), motivando: (a) **exportação de `checkpoint_best.pth` + avaliação externa no HU-UFJF**, (b) **nnU-Net v2 3D Fullres** e (c) **Cascata em 2 etapas (Anatomia → ROI do Miocárdio para Fibrose)**.
