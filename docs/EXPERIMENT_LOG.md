@@ -15,7 +15,11 @@ Todos os experimentos no CMR-MULTI utilizam rigorosamente o **mesmo split estrat
 | **Exp 02A** | UKBB Inicial — FCN TF1 (4 ch), sem escala, `lr=1e-5`, `bs=1`, `flip=True`, 4000 iter | 0.6227 ± 0.0883 | 0.4773 ± 0.0906 | — | — | 0.3835 ± 0.1219 | Concluído (`v0.2`) |
 | **Exp 02B** | UKBB Corrigido — FCN TF1 (4 ch), `1.4 mm/px`, `192×192`, `lr=1e-4`, `bs=2`, `flip=False`, `rot=15°`, 4000 iter | **0.8807 ± 0.0322** | 0.7741 ± 0.0507 | — | — | **0.7611 ± 0.0566** | Concluído (`v0.2`) |
 | **Exp 03** | U-Net ResNet34 — PyTorch SMP (5 ch), ImageNet, `200×200` (pad `224×224`), `0.5 CEw + 0.5 Dice`, 70 ep, `AdamW 4e-4` | **0.8832 ± 0.0397** | **0.7950 ± 0.0583** | 0.7798 ± 0.0475 | **0.5580 ± 0.1085** *(med 0.5722)* | 0.7466 ± 0.0833 | Concluído (`v0.2`) |
-| **Exp 04** | **nnU-Net v2 2D** — `Dataset501_CMRMULTI_LGE` (5 ch), Fold 0 (`SEED=42`), `nnUNetTrainer_250epochs` | *A executar* | *A executar* | *A executar* | *A executar* | *A executar* | Em preparação |
+| **Exp 04** | **nnU-Net v2 2D** — `Dataset501_CMRMULTI_LGE` (5 ch), Fold 0 (`SEED=42`), `nnUNetTrainer_100epochs` | *A executar* | *A executar* | *A executar* | *A executar* | *A executar* | Em preparação (`exp/nnunet-2d-cmr-multi`) |
+| **Exp 05A** | **U-Net ResNet34 (4c — sem Scar)** — SMP ImageNet, `1.0 mm`, `256×256`, multi-res aug, 120 ep, TTA + SW + teste externo HU-UFJF | *A executar* | *A executar* | — | — | *A executar* | Em preparação (`exp/unet-resnet34-cmr-multi`) |
+| **Exp 05B** | **U-Net ResNet34 (5c — com Scar)** — SMP ImageNet, `1.0 mm`, `256×256`, multi-res aug, 120 ep, TTA + SW + teste externo HU-UFJF | *A executar* | *A executar* | *A executar* | *A executar* | *A executar* | Em preparação (`exp/unet-resnet34-cmr-multi`) |
+
+> **Métricas Oficiais MICCAI 2026 (CMR-MULTI) incorporadas a partir do Exp 05:** Além de Dice 3D (GT+) e HD95 (mm), `src/evaluation/metrics_3d.py` calcula `Board DSC`, `HD máximo (mm)`, `ASD (mm)`, `Massa de Fibrose (1.05 g/mL)`, `vPCC`, `RAE` e `Score Task 2 = 0.7 × DSC_board + 0.3 × (0.5 × max(0, vPCC) + 0.5 / (1 + RAE))`, além da avaliação externa na coorte privada **HU-UFJF** (`N=10` rotulados + `patient_20`).
 
 ---
 

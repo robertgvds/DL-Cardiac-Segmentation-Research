@@ -28,6 +28,7 @@ dependencies = [
 [project.optional-dependencies]
 train = [
   "torch>=2.1",
+  "segmentation-models-pytorch>=0.3.3",
   "nnunetv2>=2.4",
   "medpy>=0.5",
 ]
