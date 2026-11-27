@@ -35,7 +35,8 @@ class KaggleJobConfig:
     kaggle_owner: str = "robertgvds"
     configuration: str = "2d"
     fold: int = 0
-    trainer: str = "nnUNetTrainer_250epochs"
+    trainer: str = "nnUNetTrainer_100epochs"
+    num_da_workers: int = 4
     kaggle_input_root: Path = Path("/kaggle/input")
     scratch_dir: Path = Path("/tmp/dlcs_work")
     working_dir: Path = Path("/kaggle/working")
@@ -106,6 +107,12 @@ class KaggleNnUNet2DRunner:
         os.environ["nnUNet_raw"] = str(self.nnunet_raw)
         os.environ["nnUNet_preprocessed"] = str(self.nnunet_preprocessed)
         os.environ["nnUNet_results"] = str(self.nnunet_results)
+        # Evita thrashing nas 4 vCPUs do Kaggle e overhead de torch.compile na Tesla T4 (sm_75)
+        os.environ["nnUNet_n_proc_DA"] = str(self.config.num_da_workers)
+        os.environ["nnUNet_compile"] = "false"
+
+        # Diagnóstico rápido de GPU/CPU no início do log
+        subprocess.run(["nvidia-smi"], check=False)
 
     def _package_nifti_predictions(self, images_ts: Path, labels_ts: Path) -> Path:
         """Organiza LGE + GT + PRED (`int16`, affine preservada) por paciente e gera ZIP."""
@@ -254,10 +261,22 @@ class KaggleNnUNet2DRunner:
             cwd=self.repo_dir,
         )
 
-        # 7. Exporta planos da nnU-Net e pacote NIfTI para inspeção no 3D Slicer
+        # 7. Exporta planos, curva de progresso, melhor checkpoint e pacote NIfTI para 3D Slicer
         plans_src = self.nnunet_preprocessed / self.config.dataset_name / "nnUNetPlans.json"
         if plans_src.exists():
             shutil.copy2(plans_src, self.export_dir / "nnUNetPlans.json")
+
+        fold_results_dir = (
+            self.nnunet_results
+            / self.config.dataset_name
+            / f"{self.config.trainer}__nnUNetPlans__{self.config.configuration}"
+            / f"fold_{self.config.fold}"
+        )
+        for artifact_name in ("progress.png", "checkpoint_best.pth"):
+            artifact_src = fold_results_dir / artifact_name
+            if artifact_src.exists():
+                shutil.copy2(artifact_src, self.export_dir / artifact_name)
+
         self._package_nifti_predictions(images_ts, labels_ts)
         LOGGER.info("Job dlcs-nnunet-2d finalizado com sucesso. Artefatos em %s", self.export_dir)
 
