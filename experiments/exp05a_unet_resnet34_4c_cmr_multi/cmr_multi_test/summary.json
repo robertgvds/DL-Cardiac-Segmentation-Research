@@ -1,0 +1,200 @@
+{
+  "cohort": "CMR-MULTI Test",
+  "task_mode": "anatomy_4c",
+  "num_patients": 7,
+  "num_with_scar": 0,
+  "num_healthy": 7,
+  "cmr_multi_miccai2026": {
+    "cmr_multi_anat_dsc": 0.8161,
+    "cmr_multi_anat_hd_mm": 17.0028,
+    "cmr_multi_anat_asd_mm": 1.6789,
+    "cmr_multi_anat_geom_score": 0.4551
+  },
+  "metrics": {
+    "dice_lv": {
+      "n": 7,
+      "mean": 0.8871,
+      "std": 0.0289,
+      "median": 0.8843,
+      "min": 0.8511,
+      "max": 0.934
+    },
+    "dice_myo_total": {
+      "n": 7,
+      "mean": 0.8004,
+      "std": 0.0505,
+      "median": 0.8076,
+      "min": 0.7008,
+      "max": 0.8549
+    },
+    "dice_myo_healthy": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "dice_scar": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "dice_rv": {
+      "n": 7,
+      "mean": 0.7608,
+      "std": 0.0781,
+      "median": 0.7999,
+      "min": 0.6452,
+      "max": 0.8371
+    },
+    "board_dice_scar": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "board_dice_mean": {
+      "n": 7,
+      "mean": 0.8161,
+      "std": 0.0406,
+      "median": 0.8061,
+      "min": 0.7719,
+      "max": 0.8713
+    },
+    "hd95_lv_mm": {
+      "n": 7,
+      "mean": 7.5773,
+      "std": 3.4215,
+      "median": 7.6347,
+      "min": 1.9865,
+      "max": 11.9424
+    },
+    "hd95_myo_total_mm": {
+      "n": 7,
+      "mean": 4.8892,
+      "std": 2.4309,
+      "median": 4.0724,
+      "min": 2.8723,
+      "max": 10.0375
+    },
+    "hd95_scar_mm": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "hd95_rv_mm": {
+      "n": 7,
+      "mean": 11.6828,
+      "std": 3.9321,
+      "median": 10.0269,
+      "min": 8.5,
+      "max": 20.0001
+    },
+    "hd_lv_mm": {
+      "n": 7,
+      "mean": 12.359,
+      "std": 4.8169,
+      "median": 11.686,
+      "min": 5.6847,
+      "max": 20.0427
+    },
+    "hd_myo_total_mm": {
+      "n": 7,
+      "mean": 14.7579,
+      "std": 5.4219,
+      "median": 13.3948,
+      "min": 10.2236,
+      "max": 26.2922
+    },
+    "hd_scar_mm": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "hd_rv_mm": {
+      "n": 7,
+      "mean": 23.8915,
+      "std": 6.6512,
+      "median": 24.4561,
+      "min": 14.3908,
+      "max": 32.4901
+    },
+    "asd_lv_mm": {
+      "n": 7,
+      "mean": 1.4248,
+      "std": 0.8446,
+      "median": 1.3694,
+      "min": 0.3426,
+      "max": 3.0962
+    },
+    "asd_myo_total_mm": {
+      "n": 7,
+      "mean": 1.0073,
+      "std": 0.4143,
+      "median": 0.9417,
+      "min": 0.6592,
+      "max": 1.9015
+    },
+    "asd_scar_mm": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "asd_rv_mm": {
+      "n": 7,
+      "mean": 2.6047,
+      "std": 1.3073,
+      "median": 2.0431,
+      "min": 1.4316,
+      "max": 5.2247
+    },
+    "myo_volume_abs_error_ml": {
+      "n": 7,
+      "mean": 7.8599,
+      "std": 6.9326,
+      "median": 6.3149,
+      "min": 2.7144,
+      "max": 22.3627
+    },
+    "scar_volume_abs_error_ml": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "scar_volume_rel_error_pct": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    },
+    "scar_mass_rae": {
+      "n": 0,
+      "mean": null,
+      "std": null,
+      "median": null,
+      "min": null,
+      "max": null
+    }
+  },
+  "healthy_false_positives": []
+}
