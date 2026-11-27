@@ -1,0 +1,21 @@
+{
+  "id": "robertgvds/dlcs-cascade-scar-emidec",
+  "title": "dlcs-cascade-scar-emidec",
+  "code_file": "run_job.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "robertgvds/cmr-multi-lge-sax",
+    "robertgvds/emidec-lge-sax",
+    "robertgvds/hu-ufjf-lge-sax"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [
+    "robertgvds/dlcs-unet-resnet34-4c"
+  ],
+  "model_sources": []
+}
