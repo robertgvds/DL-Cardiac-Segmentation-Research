@@ -16,6 +16,8 @@ Todos os experimentos no CMR-MULTI utilizam rigorosamente o **mesmo split estrat
 | **Exp 02B** | UKBB Corrigido — FCN TF1 (4 ch), `1.4 mm/px`, `192×192`, `lr=1e-4`, `bs=2`, `flip=False`, `rot=15°`, 4000 iter | 0.8807 ± 0.0322 | 0.7741 ± 0.0507 | — | — | 0.7611 ± 0.0566 | — | Concluído (`v0.2`) |
 | **Exp 03** | U-Net ResNet34 — PyTorch SMP (5 ch), ImageNet, `200×200` (pad `224×224`), `0.5 CEw + 0.5 Dice`, 70 ep, `AdamW 4e-4` | 0.8832 ± 0.0397 | 0.7950 ± 0.0583 | 0.7798 ± 0.0475 | 0.5580 ± 0.1085 *(med 0.5722)* | 0.7466 ± 0.0833 | — | Concluído (`v0.2`) |
 | **Exp 04** | **nnU-Net v2 2D** — `Dataset501_CMRMULTI_LGE` (5 ch), Fold 0 (`SEED=42`), `nnUNetTrainer_250epochs` | **0.9008 ± 0.0183** | **0.8085 ± 0.0331** | **0.7959 ± 0.0258** | **0.5846 ± 0.0907** *(med **0.6316**)* | **0.7673 ± 0.0541** | **Task 2 `0.7682`** *(vPCC `0.9585`, RAE `0.2482`)* | Concluído (`exp/nnunet-2d-cmr-multi`) |
+| **Exp 04A (v1)** | **nnU-Net v2 2D `ResEncM` (4c — sem Scar)** — `Dataset500`, `nnUNetTrainer_250epochs`, `DA=4` | — | — | — | — | — | — | Cancelado na ep. 113/250 (`307 s/ep`, proj. ~21,3h > teto 12h Kaggle) |
+| **Exp 04B (v1)** | **nnU-Net v2 2D `ResEncM` (5c — com Scar)** — `Dataset501`, `nnUNetTrainer_250epochs`, `DA=4` | — | — | — | — | — | — | Cancelado na ep. 106/250 (`312 s/ep`, proj. ~21,7h > teto 12h Kaggle) |
 
 ---
 
