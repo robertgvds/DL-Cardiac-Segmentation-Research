@@ -1,0 +1,200 @@
+{
+  "cohort": "HU-UFJF Private Cohort",
+  "task_mode": "full_5c",
+  "num_patients": 10,
+  "num_with_scar": 10,
+  "num_healthy": 0,
+  "cmr_multi_miccai2026": {
+    "cmr_multi_dsc_board": 0.5531,
+    "cmr_multi_scar_mass_vpcc": -0.0437,
+    "cmr_multi_scar_mass_rae": 5.4335,
+    "cmr_multi_task2_score": 0.4105
+  },
+  "metrics": {
+    "dice_lv": {
+      "n": 10,
+      "mean": 0.8232,
+      "std": 0.0849,
+      "median": 0.8411,
+      "min": 0.6214,
+      "max": 0.9042
+    },
+    "dice_myo_total": {
+      "n": 10,
+      "mean": 0.6513,
+      "std": 0.0897,
+      "median": 0.6863,
+      "min": 0.4563,
+      "max": 0.7422
+    },
+    "dice_myo_healthy": {
+      "n": 10,
+      "mean": 0.6324,
+      "std": 0.0801,
+      "median": 0.64,
+      "min": 0.4596,
+      "max": 0.7317
+    },
+    "dice_scar": {
+      "n": 10,
+      "mean": 0.1286,
+      "std": 0.1439,
+      "median": 0.0507,
+      "min": 0.0,
+      "max": 0.3933
+    },
+    "dice_rv": {
+      "n": 10,
+      "mean": 0.6281,
+      "std": 0.1775,
+      "median": 0.7124,
+      "min": 0.2847,
+      "max": 0.7615
+    },
+    "board_dice_scar": {
+      "n": 10,
+      "mean": 0.1286,
+      "std": 0.1439,
+      "median": 0.0507,
+      "min": 0.0,
+      "max": 0.3933
+    },
+    "board_dice_mean": {
+      "n": 10,
+      "mean": 0.5531,
+      "std": 0.0571,
+      "median": 0.5617,
+      "min": 0.4673,
+      "max": 0.6473
+    },
+    "hd95_lv_mm": {
+      "n": 10,
+      "mean": 16.8707,
+      "std": 6.6161,
+      "median": 17.28,
+      "min": 5.9955,
+      "max": 26.4
+    },
+    "hd95_myo_total_mm": {
+      "n": 10,
+      "mean": 11.506,
+      "std": 4.3307,
+      "median": 9.3271,
+      "min": 7.3077,
+      "max": 17.9785
+    },
+    "hd95_scar_mm": {
+      "n": 10,
+      "mean": 42.8712,
+      "std": 23.8571,
+      "median": 35.1696,
+      "min": 18.1906,
+      "max": 86.5237
+    },
+    "hd95_rv_mm": {
+      "n": 10,
+      "mean": 19.6217,
+      "std": 11.3841,
+      "median": 16.0957,
+      "min": 8.64,
+      "max": 38.9045
+    },
+    "hd_lv_mm": {
+      "n": 10,
+      "mean": 31.1872,
+      "std": 11.4904,
+      "median": 34.88,
+      "min": 12.9656,
+      "max": 44.4492
+    },
+    "hd_myo_total_mm": {
+      "n": 10,
+      "mean": 30.6499,
+      "std": 9.4221,
+      "median": 29.1725,
+      "min": 19.0319,
+      "max": 49.3828
+    },
+    "hd_scar_mm": {
+      "n": 10,
+      "mean": 52.9623,
+      "std": 22.4005,
+      "median": 50.2279,
+      "min": 28.9875,
+      "max": 96.4233
+    },
+    "hd_rv_mm": {
+      "n": 10,
+      "mean": 34.6033,
+      "std": 13.5751,
+      "median": 30.3605,
+      "min": 16.6514,
+      "max": 59.0508
+    },
+    "asd_lv_mm": {
+      "n": 10,
+      "mean": 4.6248,
+      "std": 1.8281,
+      "median": 4.5138,
+      "min": 1.3771,
+      "max": 7.8364
+    },
+    "asd_myo_total_mm": {
+      "n": 10,
+      "mean": 2.5821,
+      "std": 0.6209,
+      "median": 2.4119,
+      "min": 1.8746,
+      "max": 3.6711
+    },
+    "asd_scar_mm": {
+      "n": 10,
+      "mean": 20.3435,
+      "std": 12.9848,
+      "median": 16.8704,
+      "min": 5.7825,
+      "max": 37.7739
+    },
+    "asd_rv_mm": {
+      "n": 10,
+      "mean": 5.9505,
+      "std": 3.7861,
+      "median": 4.4581,
+      "min": 2.9218,
+      "max": 13.287
+    },
+    "myo_volume_abs_error_ml": {
+      "n": 10,
+      "mean": 19.0752,
+      "std": 14.8513,
+      "median": 19.0574,
+      "min": 0.8484,
+      "max": 49.044
+    },
+    "scar_volume_abs_error_ml": {
+      "n": 10,
+      "mean": 19.5844,
+      "std": 13.4465,
+      "median": 18.8726,
+      "min": 4.3531,
+      "max": 48.7566
+    },
+    "scar_volume_rel_error_pct": {
+      "n": 10,
+      "mean": 543.346,
+      "std": 733.821,
+      "median": 180.4577,
+      "min": 12.5263,
+      "max": 2004.6512
+    },
+    "scar_mass_rae": {
+      "n": 10,
+      "mean": 5.4335,
+      "std": 7.3382,
+      "median": 1.8046,
+      "min": 0.1253,
+      "max": 20.0465
+    }
+  },
+  "healthy_false_positives": []
+}
