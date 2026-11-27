@@ -1,0 +1,107 @@
+{
+  "num_patients": 7,
+  "num_with_scar": 5,
+  "num_healthy": 2,
+  "metrics": {
+    "dice_lv": {
+      "n": 7,
+      "mean": 0.9008,
+      "std": 0.0183,
+      "median": 0.8987,
+      "min": 0.8769,
+      "max": 0.9246
+    },
+    "dice_myo_total": {
+      "n": 7,
+      "mean": 0.8085,
+      "std": 0.0331,
+      "median": 0.8123,
+      "min": 0.7577,
+      "max": 0.8545
+    },
+    "dice_myo_healthy": {
+      "n": 7,
+      "mean": 0.7959,
+      "std": 0.0258,
+      "median": 0.7969,
+      "min": 0.7584,
+      "max": 0.8364
+    },
+    "dice_scar": {
+      "n": 5,
+      "mean": 0.5846,
+      "std": 0.0907,
+      "median": 0.6316,
+      "min": 0.4567,
+      "max": 0.6654
+    },
+    "dice_rv": {
+      "n": 7,
+      "mean": 0.7673,
+      "std": 0.0541,
+      "median": 0.7694,
+      "min": 0.6801,
+      "max": 0.8253
+    },
+    "hd95_lv_mm": {
+      "n": 7,
+      "mean": 5.9963,
+      "std": 3.5053,
+      "median": 5.4784,
+      "min": 2.1318,
+      "max": 11.3097
+    },
+    "hd95_myo_total_mm": {
+      "n": 7,
+      "mean": 4.6358,
+      "std": 3.0451,
+      "median": 3.0313,
+      "min": 2.2687,
+      "max": 11.0594
+    },
+    "hd95_scar_mm": {
+      "n": 5,
+      "mean": 13.7851,
+      "std": 8.1547,
+      "median": 10.4406,
+      "min": 8.5,
+      "max": 28.0945
+    },
+    "hd95_rv_mm": {
+      "n": 7,
+      "mean": 10.8035,
+      "std": 2.0965,
+      "median": 10.0001,
+      "min": 8.5,
+      "max": 15.0329
+    },
+    "scar_volume_abs_error_ml": {
+      "n": 7,
+      "mean": 8.449,
+      "std": 10.5459,
+      "median": 4.4189,
+      "min": 0.0247,
+      "max": 29.0306
+    },
+    "scar_volume_rel_error_pct": {
+      "n": 5,
+      "mean": 24.8229,
+      "std": 15.4031,
+      "median": 20.0078,
+      "min": 7.3252,
+      "max": 43.6948
+    }
+  },
+  "healthy_false_positives": [
+    {
+      "patient_id": "LGE_SAX_005",
+      "fp_voxels": 205,
+      "fp_volume_ml": 0.8242
+    },
+    {
+      "patient_id": "LGE_SAX_008",
+      "fp_voxels": 5,
+      "fp_volume_ml": 0.0247
+    }
+  ]
+}

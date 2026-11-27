@@ -1,0 +1,18 @@
+{
+  "id": "robertgvds/dlcs-nnunet-2d-4c",
+  "title": "dlcs-nnunet-2d-4c",
+  "code_file": "run_job.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "robertgvds/cmr-multi-lge-sax",
+    "robertgvds/hu-ufjf-lge-sax"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
