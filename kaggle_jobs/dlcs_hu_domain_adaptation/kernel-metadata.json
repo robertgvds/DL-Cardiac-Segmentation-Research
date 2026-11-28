@@ -1,0 +1,20 @@
+{
+  "id": "robertgvds/dlcs-hu-domain-adaptation",
+  "title": "dlcs-hu-domain-adaptation",
+  "code_file": "run_job.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "robertgvds/cmr-multi-lge-sax",
+    "robertgvds/hu-ufjf-lge-sax"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [
+    "robertgvds/dlcs-unet-resnet34-5c"
+  ],
+  "model_sources": []
+}
